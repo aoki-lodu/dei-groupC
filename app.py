@@ -77,11 +77,18 @@ active_policies = [p for p in POLICIES_DB if p["name"] in selected_policy_names]
 # ==========================================
 total_power = 0
 active_shields = set()
+active_recruits = set() # 採用ターゲットのセット
 
+# 施策の効果を集計
 for pol in active_policies:
+    # 離職防止（盾）
     if "shield" in pol["type"]:
         for t in pol["target"]:
             active_shields.add(t)
+    # 採用（ターゲット）
+    if "recruit" in pol["type"]:
+        for t in pol["target"]:
+            active_recruits.add(t)
 
 char_results = []
 for char in active_chars:
@@ -111,14 +118,19 @@ for char in active_chars:
 # ==========================================
 st.title("🎲 DE&I 組織シミュレーター")
 
-# スコアボード
-c1, c2, c3 = st.columns(3)
+# スコアボード（4列に変更しました）
+c1, c2, c3, c4 = st.columns(4)
 with c1:
     st.metric("🏆 チーム仕事力", f"{total_power} pt")
 with c2:
+    # 離職防止（旧ガード）
     shield_text = " ".join(sorted(list(active_shields))) if active_shields else "ー"
-    st.metric("🛡️ ガード中の属性", shield_text)
+    st.metric("🛡️ 離職防止中", shield_text)
 with c3:
+    # 【追加】採用強化中の属性を表示
+    recruit_text = " ".join(sorted(list(active_recruits))) if active_recruits else "ー"
+    st.metric("🔵 採用強化中", recruit_text)
+with c4:
     st.metric("👥 メンバー数", f"{len(active_chars)} 名")
 
 st.divider()
@@ -142,15 +154,15 @@ else:
             if res["is_safe"]:
                 border_color = "#00c853"
                 bg_color = "#e8f5e9"
-                header_text = "🛡️ SAFE (安全)"
-                footer_text = "✅ ガード成功中"
+                header_text = "🛡️ SAFE (離職防止)" # 文言変更
+                footer_text = "✅ 離職防止 成功中" # 文言変更
                 footer_color = "#00c853"
             else:
                 border_color = "#ff1744"
                 bg_color = "#ffebee"
                 header_text = "⚠️ RISK (危険)"
                 risk_icons = " ".join(res['risks'])
-                footer_text = f"😱 {risk_icons} が出たらアウト"
+                footer_text = f"{risk_icons} が出たらアウト" # 😱削除
                 footer_color = "#ff1744"
 
             bar_width = min(res['power'] * 10, 100)
@@ -159,12 +171,13 @@ else:
             for tag in res["tags"]:
                 tags_html += f"<span style='background:#fff; border:1px solid #ccc; border-radius:4px; padding:2px 5px; font-size:0.8em; margin-right:5px;'>{tag}</span>"
 
-            # HTML生成（インデントを削除して修正しました）
+            # HTML生成
             html_card = f"""
 <div style="border: 4px solid {border_color}; border-radius: 12px; padding: 15px; background-color: {bg_color}; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
     <div style="font-weight:bold; color:{border_color}; font-size:1.1em; margin-bottom:5px;">{header_text}</div>
     <h3 style="margin:0 0 5px 0;">{res['data']['name']}</h3>
     <div style="color:#555; font-size:0.9em; margin-bottom:10px;">属性: {''.join(res['data']['icons'])}</div>
+    
     <div style="font-size:0.8em; margin-bottom:2px;">仕事力: {res['power']}</div>
     <div style="background-color: #ddd; height: 12px; border-radius: 6px; width: 100%; margin-bottom: 10px;">
         <div style="background-color: {border_color}; width: {bar_width}%; height: 100%; border-radius: 6px;"></div>
