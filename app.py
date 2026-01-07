@@ -130,7 +130,7 @@ with c2:
     st.metric("🛡️ 離職防止中", shield_text)
 with c3:
     recruit_text = " ".join(sorted(list(active_recruits))) if active_recruits else "ー"
-    st.metric("🔵 採用強化中", recruit_text)
+    st.metric("🔵 採用できる人財", recruit_text)
 with c4:
     st.metric("👥 メンバー数", f"{len(active_chars)} 名")
 
