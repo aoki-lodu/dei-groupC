@@ -113,14 +113,13 @@ for char in active_chars:
         "is_safe": is_safe
     })
 
-# --- 【追加】社長データの作成 ---
-# ※ここで「社長」を作成し、リストの先頭(0番目)に強制的に割り込ませます
+# --- 社長データの作成 ---
 president_data = {
-    "data": {"name": "社長", "icons": ["👑"]}, # アイコンは王冠に設定
-    "power": 2,          # 仕事力は固定で2
-    "tags": [],          # 施策効果なし
-    "risks": [],         # リスクなし
-    "is_safe": True      # 常に安全
+    "data": {"name": "社長", "icons": ["👑"]},
+    "power": 2,
+    "tags": [],
+    "risks": [],
+    "is_safe": True
 }
 char_results.insert(0, president_data)
 # -----------------------------
@@ -133,7 +132,6 @@ st.title("🎲 DE&I 組織シミュレーター")
 # スコアボード
 c1, c2, c3, c4 = st.columns(4)
 with c1:
-    # 社長の分（仕事力2）も合計に足す場合は +2 してください。今回はチームの力のみ表示します。
     st.metric("🏆 チーム仕事力", f"{total_power} pt")
 with c2:
     shield_text = " ".join(sorted(list(active_shields))) if active_shields else "ー"
@@ -159,7 +157,6 @@ st.caption("リアルサイコロを振って、🟥 赤い枠 のメンバー�
 
 cols = st.columns(3)
 
-# 社長がいるのでリストは空になりません。そのままループします。
 for i, res in enumerate(char_results):
     with cols[i % 3]:
         # 配色設定
@@ -177,7 +174,7 @@ for i, res in enumerate(char_results):
             footer_text = f"{risk_icons} が出たらアウト" 
             footer_color = "#ff1744"
 
-        # 社長の場合の特別表示調整（もし必要なら）
+        # 社長の場合
         if res['data']['name'] == "社長":
             header_text = "🏢 社長 (固定)"
             footer_text = "✅ 絶対安泰"
@@ -189,8 +186,11 @@ for i, res in enumerate(char_results):
             tags_html += f"<span style='background:#fff; border:1px solid #ccc; border-radius:4px; padding:2px 5px; font-size:0.8em; margin-right:5px;'>{tag}</span>"
 
         icons_str = "".join(res['data']['icons'])
+        
+        # 【修正点】height: 320px; と flex設定を追加して、高さを強制的に揃えました
         html_card = (
-            f'<div style="border: 4px solid {border_color}; border-radius: 12px; padding: 15px; background-color: {bg_color}; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">'
+            f'<div style="border: 4px solid {border_color}; border-radius: 12px; padding: 15px; background-color: {bg_color}; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: 320px; display: flex; flex-direction: column; justify-content: space-between;">'
+            f'<div>'  # 上部コンテンツをまとめるdiv
             f'<div style="font-weight:bold; color:{border_color}; font-size:1.1em; margin-bottom:5px;">{header_text}</div>'
             f'<h3 style="margin:0 0 5px 0;">{res["data"]["name"]}</h3>'
             f'<div style="color:#555; font-size:0.9em; margin-bottom:10px;">属性: {icons_str}</div>'
@@ -198,9 +198,12 @@ for i, res in enumerate(char_results):
             f'<div style="background-color: #ddd; height: 12px; border-radius: 6px; width: 100%; margin-bottom: 10px;">'
             f'<div style="background-color: {border_color}; width: {bar_width}%; height: 100%; border-radius: 6px;"></div>'
             f'</div>'
-            f'<div style="margin-bottom: 10px;">{tags_html}</div>'
+            f'<div style="margin-bottom: 10px; min-height: 25px;">{tags_html}</div>' # タグエリアにも最低高さを確保
+            f'</div>'
+            f'<div>'  # 下部コンテンツ（線とフッター）をまとめるdiv
             f'<hr style="border-top: 2px dashed {border_color}; opacity: 0.3; margin: 10px 0;">'
             f'<div style="font-weight:bold; color:{footer_color}; text-align:center;">{footer_text}</div>'
+            f'</div>'
             f'</div>'
         )
         st.markdown(html_card, unsafe_allow_html=True)
