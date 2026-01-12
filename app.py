@@ -176,7 +176,7 @@ POLICIES_DB = [
     {"name": "公正なアサイン管理", "target": ["🌈", "⚖️"], "power": 1, "type": ["promote", "power"]},
     {"name": "透明な評価会（校正）", "target": ["🌈", "⚖️"], "power": 0, "type": ["promote", "shield"]},
     {"name": "フェア採用ダッシュボード", "target": ["🌈", "⚖️"], "power": 0, "type": ["recruit"]},
-    {"name": "給与バンド公開", "target": ["🌈", "⚖️"], "power": 0, "type": ["recruit", "promote", "shield"]}
+    {"name": "給与バンド公開", "target": ["🌈", "⚖️"], "power": 0, "type": ["recruit", "promote", "shield"]},
     {"name": "インクルーシブJD", "target": ["📖", "🌈", "⚖️"], "power": 0, "type": ["recruit"]}
 ]
 
