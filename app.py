@@ -216,10 +216,11 @@ with st.sidebar:
     st.header("🎮 ゲーム操作盤")
     st.info("👇 メンバーや施策を選んでください")
     
+    # 修正箇所: default=[] にして、初期選択を空にしました
     selected_chars = st.multiselect(
         "👤 参加メンバー",
         options=sorted_chars,
-        default=sorted_chars[:3],
+        default=[], 
         format_func=lambda c: f"{''.join(c['icons'])} {c['name']}"
     )
     
