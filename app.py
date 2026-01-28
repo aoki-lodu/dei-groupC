@@ -224,7 +224,6 @@ with st.expander("⚙️ メンバーと施策を選ぶ (ここをタップ)", e
             st.caption(f"現在 {len(selected_chars)} 名を選択中")
 
     with tab2:
-        st.markdown("**実施する施策を選んでください**")
         selected_policies = st.multiselect(
             "施策リスト",
             options=sorted_policies,
