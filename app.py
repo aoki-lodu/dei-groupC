@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd  # データフレーム表示用に必要
 
 # ==========================================
 # 0. 設定 & データ定義
@@ -10,10 +11,6 @@ st.markdown("""
 <style>
     html, body, [class*="css"] {
         font-family: 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', sans-serif;
-    }
-    /* マルチセレクトの調整 */
-    [data-testid="stMultiselect"] div[role="button"] {
-        background-color: #f0f2f6; border: none;
     }
     /* スコアボード */
     .score-grid {
@@ -42,6 +39,9 @@ st.markdown("""
     .tag {
         font-size: 0.75em; padding: 2px 5px; border-radius: 4px; margin-left: 3px;
     }
+    /* データフレームのヘッダーを隠すための調整 */
+    thead tr th:first-child { display: none }
+    tbody th { display: none }
 </style>
 """, unsafe_allow_html=True)
 
@@ -153,7 +153,7 @@ CHARACTERS_DB = [
     {"name": "Mei Tanaka", "icons": ["📖", "🌈", "⚖️"], "base": 2},
 ]
 
-# --- ✅ 施策データ（画像の順番通りに再ソート） ---
+# --- ✅ 施策データ ---
 POLICIES_DB = [
     {"name": "短時間勤務", "target": ["💚"], "cost": 2, "power": 2, "type": ["recruit", "shield", "power"]},
     {"name": "ケア支援（保育/介護補助）", "target": ["💚"], "cost": 2, "power": 2, "type": ["recruit", "shield", "power"]},
@@ -192,7 +192,7 @@ POLICIES_DB = [
     {"name": "タレントマネジメントシステムの活用", "target": ["🌈", "📖", "⚖️"], "cost": 2, "power": 0, "type": ["recruit"]},
 ]
 
-# ソート用関数 (指定順: 💚 > 📖 > 🌏 > 🌈 > ⚖️ > 複合)
+# ソート用関数
 def get_sort_priority_icons(icons_list):
     if len(icons_list) > 1: return 99
     icon = icons_list[0]
@@ -200,36 +200,65 @@ def get_sort_priority_icons(icons_list):
 
 # メンバーのソート
 sorted_chars = sorted(CHARACTERS_DB, key=lambda x: get_sort_priority_icons(x['icons']))
-
-# 施策のソートはせず、DBの並び順（画像の順）をそのまま使う
+# 施策のソート
 sorted_policies = POLICIES_DB
 
 # ==========================================
-# 1. スマホ対応入力エリア
+# 1. スマホ対応入力エリア (st.dataframe版)
 # ==========================================
 st.title("🎲 DE&I 組織シミュレーター")
 
 with st.expander("⚙️ メンバーと施策を選ぶ (ここをタップ)", expanded=True):
     tab1, tab2 = st.tabs(["👥 メンバー選択", "🃏 施策実行"])
     
+    # --- メンバー選択 (DataFrame) ---
     with tab1:
-        selected_chars = st.multiselect(
-            "参加メンバー",
-            options=sorted_chars,
-            default=[], 
-            format_func=lambda c: f"{''.join(c['icons'])} {c['name']}",
-            placeholder="タップして選択..."
+        st.caption("👇 リストをタップして選択してください（複数選択可）")
+        
+        # DataFrame作成
+        df_chars = pd.DataFrame(sorted_chars)
+        # 表示用の列を作成
+        df_chars["選択用リスト"] = df_chars.apply(lambda x: f"{''.join(x['icons'])} {x['name']}", axis=1)
+        
+        # 選択用DataFrameの表示
+        selection_event_chars = st.dataframe(
+            df_chars[["選択用リスト"]], # 表示する列
+            use_container_width=True,
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="multi-row",
+            height=300 # スクロールしやすい高さ
         )
+        
+        # 選択された行のインデックスを取得
+        selected_indices = selection_event_chars.selection.rows
+        selected_chars = [sorted_chars[i] for i in selected_indices]
+        
         if len(selected_chars) > 0:
             st.caption(f"現在 {len(selected_chars)} 名を選択中")
 
+    # --- 施策選択 (DataFrame) ---
     with tab2:
-        selected_policies = st.multiselect(
-            "施策リスト",
-            options=sorted_policies,
-            default=[],
-            format_func=lambda p: f"{''.join(p['target'])} {p['name']}"
+        st.caption("👇 実施する施策をタップしてください（複数選択可）")
+        
+        # DataFrame作成
+        df_pols = pd.DataFrame(sorted_policies)
+        # 表示用の列を作成
+        df_pols["施策リスト"] = df_pols.apply(lambda x: f"{''.join(x['target'])} {x['name']}", axis=1)
+        
+        # 選択用DataFrameの表示
+        selection_event_pols = st.dataframe(
+            df_pols[["施策リスト"]],
+            use_container_width=True,
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="multi-row",
+            height=300
         )
+        
+        # 選択された行のインデックスを取得
+        selected_pol_indices = selection_event_pols.selection.rows
+        selected_policies = [sorted_policies[i] for i in selected_pol_indices]
 
 active_chars = selected_chars
 active_policies = selected_policies
@@ -372,7 +401,6 @@ if active_policies:
     for pol in active_policies:
         # タグ生成
         ptags = []
-        # Cost表示は削除
         
         # パワーが0より大きい場合のみ表示
         if pol["power"] > 0: ptags.append(f"力+{pol['power']}")
