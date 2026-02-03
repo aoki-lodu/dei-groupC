@@ -6,42 +6,70 @@ import pandas as pd
 # ==========================================
 st.set_page_config(page_title="LODU Game Mobile", layout="wide", initial_sidebar_state="collapsed")
 
-# --- カスタムCSS（スマホ最適化） ---
+# --- カスタムCSS（スマホ最適化・文字サイズ拡大版） ---
 st.markdown("""
 <style>
+    /* ベースフォントとサイズ調整 */
     html, body, [class*="css"] {
         font-family: 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', sans-serif;
+        font-size: 18px; /* 基本サイズをアップ */
     }
+    
     /* スコアボード */
     .score-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); /* 幅を少し広げる */
+        gap: 10px;
         background: #ffffff;
-        padding: 10px;
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 25px;
         text-align: center;
     }
     .score-item {
         display: flex; flex-direction: column; justify-content: center; align-items: center;
+        margin-bottom: 5px;
     }
-    .score-label { font-size: 11px; color: #666; white-space: nowrap; }
-    .score-value { font-size: 16px; font-weight: bold; color: #333; }
+    .score-label { 
+        font-size: 13px; /* 11px -> 13px */
+        color: #666; 
+        white-space: nowrap; 
+        margin-bottom: 2px;
+    }
+    .score-value { 
+        font-size: 20px; /* 16px -> 20px */
+        font-weight: bold; 
+        color: #333; 
+        line-height: 1.2;
+    }
     
     /* 施策カード */
     .policy-card {
-        background: white; border: 1px solid #ddd; padding: 10px; 
-        border-radius: 6px; margin-bottom: 8px; 
+        background: white; border: 1px solid #ddd; padding: 15px; /* 余白拡大 */
+        border-radius: 8px; margin-bottom: 12px; 
         display: flex; justify-content: space-between; align-items: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
     .tag {
-        font-size: 0.75em; padding: 2px 5px; border-radius: 4px; margin-left: 3px;
+        font-size: 0.85em; /* タグも少し大きく */
+        padding: 4px 6px; 
+        border-radius: 4px; 
+        margin-left: 4px;
+        white-space: nowrap;
     }
-    /* データフレームのヘッダーを隠すための調整 */
+    
+    /* データフレーム調整 */
     thead tr th:first-child { display: none }
     tbody th { display: none }
+    
+    /* メンバーカードのスタイル */
+    .member-card {
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -333,7 +361,7 @@ st.markdown(f"""
 <div class="score-grid">
     <div class="score-item">
         <div class="score-label">🏆 チーム仕事力</div>
-        <div class="score-value" style="color:#d32f2f; font-size:24px;">{total_power}</div>
+        <div class="score-value" style="color:#d32f2f; font-size:26px;">{total_power}</div>
     </div>
     <div class="score-item">
         <div class="score-label">🛡️ 離職防止</div>
@@ -349,7 +377,7 @@ st.markdown(f"""
     </div>
     <div class="score-item">
         <div class="score-label">👥 メンバー</div>
-        <div class="score-value">{len(char_results)}<span style="font-size:12px">名</span></div>
+        <div class="score-value">{len(char_results)}<span style="font-size:14px">名</span></div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -386,18 +414,18 @@ if char_results:
                 status_icon = "👑 社長"
                 footer_text = "鉄壁"
 
-            tags_str = "".join([f"<span style='font-size:10px; border:1px solid #ccc; border-radius:3px; padding:1px 3px; margin-right:3px; background:white;'>{t}</span>" for t in res["tags"]])
+            tags_str = "".join([f"<span style='font-size:12px; border:1px solid #ccc; border-radius:3px; padding:2px 4px; margin-right:3px; background:white;'>{t}</span>" for t in res["tags"]])
             
             html_card = (
-                f'<div class="member-card" style="border-left: 5px solid {border_color}; background-color: {bg_color};">'
-                f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">'
-                f'  <div style="font-weight:bold; font-size:0.9em; color:{border_color}">{status_icon}</div>'
-                f'  <div style="font-size:0.8em; font-weight:bold; color:#555">力: {res["power"]}</div>'
+                f'<div class="member-card" style="border-left: 6px solid {border_color}; background-color: {bg_color};">'
+                f'<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">'
+                f'  <div style="font-weight:bold; font-size:1.0em; color:{border_color}">{status_icon}</div>'
+                f'  <div style="font-size:0.95em; font-weight:bold; color:#555">力: {res["power"]}</div>'
                 f'</div>'
-                f'<div style="font-weight:bold; font-size:1.1em; margin-bottom:2px;">{res["data"]["name"]}</div>'
-                f'<div style="font-size:0.85em; color:#666; margin-bottom:5px;">{"".join(res["data"]["icons"])}</div>'
-                f'<div style="margin-bottom:8px; min-height:16px;">{tags_str}</div>'
-                f'<div style="border-top:1px dashed {border_color}; padding-top:4px; font-size:0.85em; color:{footer_color}; text-align:right; font-weight:bold;">'
+                f'<div style="font-weight:bold; font-size:1.2em; margin-bottom:4px;">{res["data"]["name"]}</div>'
+                f'<div style="font-size:1.0em; color:#666; margin-bottom:8px;">{"".join(res["data"]["icons"])}</div>'
+                f'<div style="margin-bottom:10px; min-height:18px;">{tags_str}</div>'
+                f'<div style="border-top:1px dashed {border_color}; padding-top:6px; font-size:0.95em; color:{footer_color}; text-align:right; font-weight:bold;">'
                 f'{footer_text}'
                 f'</div>'
                 f'</div>'
@@ -426,8 +454,8 @@ if active_policies:
             f"""
             <div class="policy-card">
                 <div>
-                    <div style="font-weight:bold; color:#333; font-size:0.95em;">{pol['name']}</div>
-                    <div style="font-size:0.8em; color:#777;">対象: {"".join(pol['target'])}</div>
+                    <div style="font-weight:bold; color:#333; font-size:1.1em;">{pol['name']}</div>
+                    <div style="font-size:0.9em; color:#777;">対象: {"".join(pol['target'])}</div>
                 </div>
                 <div style="text-align:right;">{ptags_html}</div>
             </div>
