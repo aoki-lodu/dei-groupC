@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time # ポップアップ表示用
 
 # ==========================================
 # 0. 設定 & データ定義
@@ -246,7 +247,7 @@ sorted_chars, sorted_policies = get_sorted_data()
 # ==========================================
 # 1. 状態管理 & 初期セットアップ
 # ==========================================
-st.title("DE&I経営ゲーム")
+st.title("🎲 DE&I 組織シミュレーター")
 
 # セッション状態の初期化
 if "is_startup_completed" not in st.session_state:
@@ -342,28 +343,19 @@ else:
             else:
                 st.warning("⚠️ 「採用」施策を選ぶと、追加メンバーが選べるようになります")
 
-        # --- ② 追加採用 (フィルタリングあり) ---
+        # --- ② 追加採用 (全表示 & バリデーション) ---
         with tab2:
-            st.caption("👇 採用条件を満たしたメンバーのみ表示されます")
+            st.caption("👇 追加したいメンバーを選択してください（条件不一致の場合は警告が出ます）")
             
-            # 初期メンバーに含まれていない人だけをフィルタリング対象にする
-            # (名前の一致で判定)
+            # 初期メンバーに含まれていない人だけをリスト化
             init_names = [m["name"] for m in init_members]
             remaining_chars = [c for c in sorted_chars if c["name"] not in init_names]
 
-            # 属性フィルタリング
-            recruitable_chars = []
-            for char in remaining_chars:
-                char_icons_set = set(char["icons"])
-                # 部分集合かどうか判定
-                if char_icons_set.issubset(recruit_enabled_icons):
-                    recruitable_chars.append(char)
-            
-            selected_recruits = []
-            if recruitable_chars:
-                df_chars_recruit = pd.DataFrame(recruitable_chars)
+            if remaining_chars:
+                df_chars_recruit = pd.DataFrame(remaining_chars)
                 df_chars_recruit["選択用リスト"] = df_chars_recruit.apply(lambda x: f"{''.join(x['icons'])} {x['name']}", axis=1)
                 
+                # ★全員表示する
                 selection_event_recruits = st.dataframe(
                     df_chars_recruit[["選択用リスト"]], 
                     use_container_width=True,
@@ -375,17 +367,39 @@ else:
                 )
                 
                 recruit_indices = selection_event_recruits.selection.rows
-                selected_recruits = [recruitable_chars[i] for i in recruit_indices]
+                candidates = [remaining_chars[i] for i in recruit_indices]
+                
+                # ★バリデーション処理
+                valid_recruits = []
+                invalid_recruits = []
+                
+                for char in candidates:
+                    char_icons_set = set(char["icons"])
+                    # 採用条件（施策）の部分集合になっているかチェック
+                    if char_icons_set.issubset(recruit_enabled_icons):
+                        valid_recruits.append(char)
+                    else:
+                        invalid_recruits.append(char)
+                
+                # エラーがある場合、ポップアップ(Toast)で警告
+                if invalid_recruits:
+                    # 名前を列挙して表示
+                    invalid_names = "、".join([c["name"] for c in invalid_recruits])
+                    msg = "採用の基盤が整っていないのでこの人を採用することができません"
+                    st.toast(f"🚫 {msg}", icon="⚠️")
+                    # 画面上にもエラー表示を残す
+                    st.error(f"🚫 {msg} ({invalid_names})")
+                
+                # 有効なメンバーのみ採用リストに入れる
+                selected_recruits = valid_recruits
                 
                 if len(selected_recruits) > 0:
                     st.caption(f"現在 {len(selected_recruits)} 名を追加選択中")
             else:
-                if not recruit_enabled_icons:
-                    st.error("🚫 採用施策が選ばれていないため、追加できません")
-                else:
-                    st.error("🚫 条件を満たす残りの人材がいません")
+                st.info("全ての人材が選択済みです")
+                selected_recruits = []
 
-    # ★最終的なメンバーリスト = 初期メンバー + 追加採用メンバー
+    # ★最終的なメンバーリスト = 初期メンバー + 有効な追加採用メンバー
     active_chars = init_members + selected_recruits
 
 
